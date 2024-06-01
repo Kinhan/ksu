@@ -1,10 +1,10 @@
-name: Build KernelSU For MI8SE (sirius)
+name: Build KernelSU For MI8 (dipper)
 
 on:
   workflow_dispatch:
 
 jobs:
-  KSUForSirius:
+  KSUForDipper:
     runs-on: ubuntu-latest
     steps:
       - name: Install Dependencies
@@ -15,10 +15,10 @@ jobs:
 
       - name: Clone Sources and Toolchain
         run: |
-          git clone https://github.com/A-JiuA/sirius_Kernel --depth=1 -b sirius-q-oss --recurse-submodules sirius_Kernel
+          git clone https://github.com/MiCode/Xiaomi_Kernel_OpenSource --depth=1 -b dipper-p-oss --recurse-submodules dipper_Kernel
           git clone https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b --depth=1 --single-branch --no-tags -b lineage-20.0 ~/clang
-          git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-10.0.0_r47 --depth=1 --single-branch --no-tags ~/aarch64-linux-android-4.9
-          git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-10.0.0_r47 --depth=1 --single-branch --no-tags ~/arm-linux-androideabi-4.9
+          git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r61 --depth=1 --single-branch --no-tags ~/aarch64-linux-android-4.9
+          git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r61 --depth=1 --single-branch --no-tags ~/arm-linux-androideabi-4.9
           git clone https://github.com/SakuraNotStupid/AnyKernel3
 
       - name: Compile Kernel (MIUI)
@@ -29,30 +29,30 @@ jobs:
           export PATH=$CLANG:$GCC64:$GCC32:$PATH
           output_dir=out
           export args="-j$(nproc --all) ARCH=arm64 SUBARCH=arm64 O=$output_dir CC=clang CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_ARM32=arm-linux-androideabi- CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1"
-          pushd sirius_Kernel
-          make ${args} sirius_zhong_defconfig
+          pushd dipper_Kernel
+          make ${args} sdm845_defconfig
           make ${args}
           popd
 
       - name: Package the Kernel (MIUI)
         run: |
-          cp -v sirius_Kernel/out/arch/arm64/boot/Image.gz AnyKernel3/
+          cp -v dipper_Kernel/out/arch/arm64/boot/Image.gz AnyKernel3/
           pushd AnyKernel3
-          7z a -mx9 ../MI8SE_KernelSU_MIUI.zip *
+          7z a -mx9 ../MI8_KernelSU_MIUI.zip *
           popd
 
       - name: Create Config Info
         run: |
-          echo "Device: MI 8 SE
-          Code: Sirius/Xmsirius
+          echo "Device: MI 8
+          Code: Dipper/Xmdipper
           Build Code: ${{ github.run_number }}
-          KernelSU For MI8SE" >> INFO.txt
+          KernelSU For MI8" >> INFO.txt
 
       - name: Upload Kernel Package to GH-Release
         uses: ncipollo/release-action@v1.8.6
         with:
-          artifacts: MI8SE_KernelSU_MIUI.zip
-          name: "MI8SE_KernelSU"
-          tag: "${{ github.run_number }}_MI8SE_KernelSU"
+          artifacts: MI8_KernelSU_MIUI.zip
+          name: "MI8_KernelSU"
+          tag: "${{ github.run_number }}_MI8_KernelSU"
           bodyFile: "INFO.txt"
           token: ${{ secrets.GITHUB_TOKEN }}
